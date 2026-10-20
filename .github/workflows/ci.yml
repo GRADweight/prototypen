@@ -1,0 +1,46 @@
+# CI für prototypen — smoke-Teste für beide lauffähigen Samples.
+
+name: prototypen-smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install gw-shared-lib (CANONICAL-Fundament)
+        run: |
+          python -m pip install --upgrade pip
+          pip install git+https://github.com/GRADweight/shared-lib
+
+      - name: Compile check
+        run: |
+          python -m compileall -q \
+            prototypes/01-rag-chatbot/code/ \
+            prototypes/02-rechnungs-extraktion/code/
+
+      - name: RAG-Chatbot smoke (offline, kein Netz)
+        run: |
+          cd prototypes/01-rag-chatbot
+          python3 code/main.py "Wie viele Ferientage habe ich im ersten Dienstjahr?"
+          # erwarteter Output: STATUS: OK
+
+      - name: Rechnungs-Extraktion smoke (offline)
+        run: |
+          cd prototypes/02-rechnungs-extraktion
+          python3 code/main.py
+          # erwarteter Output: STATUS: OK

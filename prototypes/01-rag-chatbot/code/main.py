@@ -1,7 +1,8 @@
 """RAG-Chatbot über gw-shared-lib — smoke-demo (offline, kein Netz).
 
 Nutzt die 6 Bausteine von gw-shared-lib: RAGPipeline + GuardPipeline
-+ Chunk + Guard + Config + Audit. Lauffähig ohne Setup.
++ Chunk + Guard + Config + Audit. Lauffähig ohne Setup (Fallback:
+sibling-`../shared-lib` lokal; in CI: pip-install via `git+https://...`).
 
 Für Produktion: setze GW_INFER_URL + GW_INFER_EMBED (nomic-embed-text
 über Ollama). Ohne: der StubClient (bag-of-words) reicht für
@@ -11,13 +12,15 @@ from __future__ import annotations
 import sys
 import pathlib
 
-# shared-lib einbinden (Relativ-Pfad, kein pip nötig für die Demo)
-sys.path.insert(
-    0,
-    str(pathlib.Path(__file__).resolve().parents[4] / "shared-lib"),
-)
-
-from gw_shared_lib import RAGPipeline, GuardPipeline, Chunk  # noqa: E402
+# CANONICAL gw-shared-lib: in CI via pip, lokal via Sibling-`../shared-lib`
+try:
+    from gw_shared_lib import RAGPipeline, GuardPipeline, Chunk
+except ImportError:
+    sys.path.insert(
+        0,
+        str(pathlib.Path(__file__).resolve().parents[4] / "shared-lib"),
+    )
+    from gw_shared_lib import RAGPipeline, GuardPipeline, Chunk
 
 # Minimal-Korpus (synthetisch, kein Kundendaten)
 CORPUS = [

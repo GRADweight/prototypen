@@ -15,12 +15,15 @@ import sys
 import pathlib
 import re
 
-sys.path.insert(
-    0,
-    str(pathlib.Path(__file__).resolve().parents[4] / "shared-lib"),
-)
-
-from gw_shared_lib import audit  # noqa: E402, E402-Import oben
+# CANONICAL gw-shared-lib: in CI via pip, lokal via Sibling `../shared-lib`
+try:
+    from gw_shared_lib import audit
+except ImportError:
+    sys.path.insert(
+        0,
+        str(pathlib.Path(__file__).resolve().parents[4] / "shared-lib"),
+    )
+    from gw_shared_lib import audit
 
 # Fake-Rechnung (demo, kein Kundendaten)
 FAKE_INVOICE = (
