@@ -1,0 +1,7 @@
+# .gitignore — prototypen
+.audit/
+__pycache__/
+*.py[cod]
+.venv/
+*~
+.DS_Store
