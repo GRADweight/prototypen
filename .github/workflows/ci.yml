@@ -1,6 +1,6 @@
 # CI für prototypen — smoke-Teste für beide lauffähigen Samples.
 
-name: prototypen-smoke
+name: protypen-smoke
 
 on:
   push:
@@ -13,19 +13,30 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.11', '3.12']
+    # CANONICAL gw-shared-lib (6 Bausteine, stdlib, kein Build) ist in
+    #   vendor/gw_shared_lib/  VENDOR-t, weil shared-lib PRIVAT ist (Q1 21.10.2026:
+    #   Wave 1 bleibt privat) und ein pull_request-Event-Token nur das aktuelle
+    #   Repo (prototypen) liest, nicht ein zweites privates Org-Repo.
+    #   PYTHONPATH zeigt auf vendor/ => import gw_shared_lib ohne Netz, ohne
+    #   pip, ohne Secret. Kein public-Abhaengigkeit.
+    env:
+      PYTHONPATH: "${{ github.workspace }}/vendor"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Python ${{ matrix.python-version }}
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
 
-      - name: Install gw-shared-lib (CANONICAL-Fundament)
+      # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.0.
+      # CANONICAL-Invariant: guard.INJECTION_SIGNATURES == 16. Abweichung =>
+      # rot => vendor/ muss von shared-lib neu synchronisiert + SNAPSHOT
+      # aktualisiert werden (kein stiller Drift in den CANONICAL-State).
+      - name: Vendor drift-guard (CANONICAL-Pruefung)
         run: |
-          python -m pip install --upgrade pip
-          pip install git+https://github.com/GRADweight/shared-lib
+          [ -d vendor/gw_shared_lib ] || { echo "vendor/gw_shared_lib fehlt — von shared-lib neu kopieren"; exit 1; }
+          python3 -c "import sys; sys.path.insert(0,'vendor'); from gw_shared_lib.guard import INJECTION_SIGNATURES as s; assert len(s)==16, f'DRIFT: signatures={len(s)} != 16'; print('OK: INJECTION_SIGNATURES =', len(s), '(CANONICAL)')"
 
       - name: Compile check
         run: |
@@ -44,3 +55,17 @@ jobs:
           cd prototypes/02-rechnungs-extraktion
           python3 code/main.py
           # erwarteter Output: STATUS: OK
+
+      # --- Produktiv-Upgrade (deaktiviert, dokumentiert) ---
+      # Statt vendor/ + Secret: wenn ein feingranuliertes PAT (Shared_Secrets,
+      # scope: read auf beiderm Repos) als github.com secret SHARED_LIB_TOKEN
+      # gesetzt ist, kann dieser Schritt aktiviert werden:
+      #
+      # - name: Checkout shared-lib (privat, canonical via Secret)
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: GRADweight/shared-lib
+      #     ref: v0.1.0
+      #     path: _shared-lib
+      #     token: ${{ secrets.SHARED_LIB_TOKEN }}
+      # +  PYTHONPATH: "${{ github.workspace }}/_shared-lib"

@@ -1,0 +1,7 @@
+gw_shared_lib vendor snapshot — CANONICAL-Quelle: GRADweight/shared-lib
+commit: f05457b4c5c6057021f7bdcc333496a81f33a7fd
+tag: v0.1.0
+Grund: 10/2026 (pro Wave-1: shared-lib privat, kein Cross-Repo-Leserecht im CI-Event-Token).
+Drift-Guard: CI prueft guard.INJECTION_SIGNATURES = 16. Abweichung => rot => neu synchronisieren.
+Upgrade-Pfad: bei v0.2+ von shared-lib neu kopieren + SNAPSHOT aktualisieren.
+Produktion (optional): Repo-Secret SHARED_LIB_TOKEN => checkout statt vendor (siehe ci.yml Kommentar).
