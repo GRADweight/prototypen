@@ -15,24 +15,26 @@ jobs:
         python-version: ['3.9', '3.11', '3.12']
     # 2026-10-21 Fix (Q1: shared-lib bleibt in Wave 1 PRIVAT):
     # Der alte Schritt 'pip install git+https://github.com/GRADweight/shared-lib'
-    # lieferte 404 (privates Repo, kein Auth in der Bare-URL). Lösung:
-    # 2. Checkout des privaten Org-Repos (GitHub Actions GITHUB_TOKEN liest
-    # automatisch den privaten Schwesterauszug) + PYTHONPATH. Kein Netz-Pip,
-    # kein public-Abhaengigkeit. Lokaler Proof: beide Smoke-Tests STATUS: OK
-    # mit PYTHONPATH=<workspace>/../shared-lib (3.9/3.11/3.12).
+    # lieferte 404 (privates Repo, kein Auth). Aenderung (2): path muss INNERHALB
+    # des workspaces liegen (../shared-lib wurde von actions/checkout abgewiesen:
+    # "Repository path ... is not under .../prototypen"). Kein pip-build notig,
+    # weil shared-lib reine Module ist und PYTHONPATH den Import liefert
+    # (pyproject build-backend ist nicht relevant). Kein Netz-Pip, kein
+    # public-Abhaengigkeit.
     env:
-      PYTHONPATH: "${{ github.workspace }}/../shared-lib"
+      PYTHONPATH: "${{ github.workspace }}/_shared-lib"
     steps:
       - uses: actions/checkout@v4
 
       # 2. Checkout: CANONICAL-Fundament shared-lib (privates Org-Repo).
-      # Pin an Tag = reproduzierbar. Bei shared-lib v0.2.x: ref hier erhoehen.
+      # path INSIDE workspace. Pin an Tag = reproduzierbar.
+      # Bei shared-lib v0.2.x: ref hier erhoehen.
       - name: Checkout shared-lib (privat, CANONICAL-Fundament)
         uses: actions/checkout@v4
         with:
           repository: GRADweight/shared-lib
           ref: v0.1.0
-          path: ../shared-lib
+          path: _shared-lib
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
