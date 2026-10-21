@@ -28,7 +28,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
 
       # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.0.
       # CANONICAL-Invariant: guard.INJECTION_SIGNATURES == 16. Abweichung =>
