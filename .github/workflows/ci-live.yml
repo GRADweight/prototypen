@@ -117,7 +117,7 @@ jobs:
       # Sichtbarer DELTA: alle Verdict im Log
       - name: "Delta-Report"
         run: |
-          for f in artifacts/*/*/verdict-live.json; do
+          for f in artifacts/*/verdict-live.json; do
             [ -f "$f" ] || continue
             echo "=== $f ==="
             cat "$f"; echo
@@ -127,7 +127,7 @@ jobs:
       - name: "Check: kein NO-GO unter den Verdicts"
         run: |
           failed=0
-          for f in artifacts/*/*/verdict-live.json; do
+          for f in artifacts/*/verdict-live.json; do
             [ -f "$f" ] || continue
             overall=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('overall',''))" "$f")
             echo "$f -> $overall"
