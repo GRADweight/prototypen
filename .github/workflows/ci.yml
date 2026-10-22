@@ -71,7 +71,7 @@ jobs:
           python -m gw_proto prototypes/05-offerten-generator/manifest.json --artifact artifacts/05-offerten-generator/verdict.json --audit .audit/ci-gate.jsonl
           python -m gw_proto prototypes/06-intranet-wissenssuche/manifest.json --no-prod --artifact artifacts/06-intranet-wissenssuche/verdict.json --audit .audit/ci-gate.jsonl || true
           echo "=== Verdicts ==="
-          for f in artifacts/*/*/verdict.json; do echo "--- $f ---"; cat "$f"; done
+          for f in artifacts/*/verdict.json; do echo "--- $f ---"; cat "$f"; done
 
       - name: Audit-Trail (JSONL)
         if: always()
