@@ -6,7 +6,7 @@
   "min_score_prod": 0.30,
   "oracles": {
     "demo": {"client": "stub"},
-    "prod": {"client": "ollama", "url": "http://localhost:11434", "embed_model": "nomic-embed-text"}
+    "prod": {"client": "ollama", "url": "http://127.0.0.1:11434", "embed_model": "nomic-embed-text"}
   },
   "corpus": [
     {"content": "Deine Order-Nummer findest du in der Bestaetigungs-E-Mail und auf deinem Kundendashboard unter 'Meine Bestellungen'. Der Status (bestaetigt, in Produktion, versand) ist dort live einsehbar.",

@@ -48,7 +48,15 @@ OWNER="${OWNER:-GRADweight}"
 REPO="${REPO:-prototypen}"
 LABEL="${LABEL:-gw-ollama}"
 APPLY="${APPLY:-0}"
-RUNNER_URL="${RUNNER_URL:-https://github.com/${OWNER}/${REPO}/settings/actions/runners/new}"
+# prototypen ist ORG-owned -> Runner-Registrierung laeuft auf ORG-LEVEL
+# (/orgs/OWNER/...), NICHT repo-level (gibt 404). Org-Modus ist der Default
+# fuer GRADweight/prototypen. Bei einem eigenen Repo: ORG_MODE=0.
+ORG_MODE="${ORG_MODE:-1}"
+if [ "${ORG_MODE}" = "1" ]; then
+  RUNNER_URL="https://github.com/orgs/${OWNER}/actions/runners"
+else
+  RUNNER_URL="https://github.com/${OWNER}/${REPO}/settings/actions/runners"
+fi
 GH_PAT="${GH_PAT:-}"
 
 DRY=1
@@ -65,6 +73,18 @@ for dep in curl ollama; do
     echo "  [WARN] $dep not found in \$PATH"
   fi
 done
+
+# Org-owned Repo? -> Runner auf ORG-LEVEL.
+if [ "${ORG_MODE}" = "1" ]; then
+  echo "  [INFO] ORG_MODE=1 -> Runner auf ORG-LEVEL ($OWNER), nicht Repo-Level"
+  echo "  [INFO] Benoetigter Token-Scope: admin:org + workflow"
+  echo "  [INFO] (gh: 'gh auth refresh -h github.com -s admin:org workflow') -- von DIEM, nicht automatisch"
+  echo "  [INFO] Endpoint: /orgs/$OWNER/actions/runners/registration-token"
+else
+  echo "  [INFO] ORG_MODE=0 -> Runner auf REPO-LEVEL ($OWNER/$REPO)"
+  echo "  [INFO] Benoetigter Token-Scope: admin:repo (workflow)"
+  echo "  [INFO] Endpoint: /repos/$OWNER/$REPO/actions/runners/registration-token"
+fi
 
 # Ollama: check that at least one model exists
 echo "=== Ollama check ==="
@@ -88,6 +108,7 @@ echo
 echo "=== github-runner registration ==="
 echo "  Target:    $RUNNER_URL"
 echo "  Owner/Repo: $OWNER/$REPO"
+echo "  Mode:      ORG_MODE=$ORG_MODE  ($([ "$ORG_MODE" = "1" ] && echo 'org-level (default for prototypen)' || echo 'repo-level'))"
 echo "  Label:     $LABEL"
 if [ -z "${GH_PAT:-}" ]; then echo "  PAT:       (unset)"; else echo "  PAT:       (set, len $(printf '%s' "$GH_PAT" | wc -c))"; fi
 echo "  APPLY:     $APPLY  (DRY-RUN: $DRY)"
@@ -105,11 +126,14 @@ Aktionen im REAL-Ablauf (nicht ausgefuehrt):
         && echo "PAT OK"
 
   2. Runner-Tokens vom GitHub API auslesen:
+       # ORG-owned (DEFAULT): ORG-LEVEL, braucht admin:org + workflow
        TOKEN_B64=$( \
-         curl -fsS "https://api.github.com/repos/${OWNER}/${REPO}/actions/runners/registration-token" \
-           -H "Authorization: Bearer ${GH_PAT}" \
+         curl -fsS "https://api.github.com/orgs/${OWNER}/actions/runners/registration-token" \
+           -H "Authorization: Bearer ***" \
          | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])"
        )
+       # Eigene Repo (ORG_MODE=0): REPO-LEVEL
+       # curl -fsS "https://api.github.com/repos/${OWNER}/${REPO}/actions/runners/registration-token" ...
 
   3. Runner-Agent installieren und als service starten:
        ./config.sh --url "https://github.com/${OWNER}/${REPO}" \
@@ -150,8 +174,14 @@ curl -fsS "https://api.github.com/repos/${OWNER}/${REPO}" \
   -H "Authorization: Bearer $GH_PAT" >/dev/null && echo "  PAT OK"
 
 echo "=== step 2: get runner-registration token ==="
-TOKEN_B64=$(curl -fsS "https://api.github.com/repos/${OWNER}/${REPO}/actions/runners/registration-token" \
-  -H "Authorization: Bearer $GH_PAT" \
+# ORG-owned (DEFAULT) -> ORG-LEVEL Endpoint
+if [ "${ORG_MODE}" = "1" ]; then
+  TOKEN_ENDPOINT="https://api.github.com/orgs/${OWNER}/actions/runners/registration-token"
+else
+  TOKEN_ENDPOINT="https://api.github.com/repos/${OWNER}/${REPO}/actions/runners/registration-token"
+fi
+TOKEN_B64=$(curl -fsS "$TOKEN_ENDPOINT" \
+  -H "Authorization: Bearer ***" \
   | python3 -c "import sys, json; print(json.load(sys.stdin)['token'])")
 echo "  runner-token: ${TOKEN_B64:0:12}..."
 

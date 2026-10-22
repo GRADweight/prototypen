@@ -48,7 +48,7 @@ jobs:
     timeout-minutes: 5
     env:
       PYTHONPATH: "${{ github.workspace }}/vendor"
-      GW_INFER_URL: "${{ secrets.GW_INFER_URL || 'http://localhost:11434' }}"
+      GW_INFER_URL: "${{ secrets.GW_INFER_URL || 'http://127.0.0.1:11434' }}"
       GW_INFER_EMBED: "${{ secrets.GW_INFER_EMBED || 'nomic-embed-text' }}"
     steps:
       - uses: actions/checkout@v4

@@ -6,7 +6,7 @@
   "min_score_prod": 0.30,
   "oracles": {
     "demo": {"client": "stub"},
-    "prod": {"client": "ollama", "url": "http://localhost:11434", "embed_model": "nomic-embed-text"}
+    "prod": {"client": "ollama", "url": "http://127.0.0.1:11434", "embed_model": "nomic-embed-text"}
   },
   "corpus": [
     {"content": "Mitarbeiter mit dem ersten Dienstjahr erhalten 25 Ferientage. Ab einem Dienstalter von 50 Jahren erhöhen sich die Ferientage auf 28 pro Kalenderjahr. Der Ferienanspruch ist in der Personalverordnung geregelt.",
