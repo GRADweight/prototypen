@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.0.
+      # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.1.
       # CANONICAL-Invariant: guard.INJECTION_SIGNATURES == 16. Abweichung =>
       # rot => vendor/ muss von shared-lib neu synchronisiert + SNAPSHOT
       # aktualisiert werden (kein stiller Drift in den CANONICAL-State).
@@ -56,7 +56,30 @@ jobs:
           python3 code/main.py
           # erwarteter Output: STATUS: OK
 
-      # --- Produktiv-Upgrade (deaktiviert, dokumentiert) ---
+      # --- GW-PROTO PRODUCTION-GATE (NEU, M2) ---
+      # Der Gleiche Gate für alle Prototypen: Dual-Orakel (DEMO=Stub offline /
+      # PROD=echtes Modell) + Delta + GO/NO-GO. In CI (kein Ollama) läuft der
+      # PROD-Orakel offline => jeder Prototyp, der ein online-Modell braucht,
+      # gibt ehrlich CONDITIONAL (nicht GO). Deterministische Domänen (Extraktion)
+      # geben GO. Das ist der ehrliche Zustand — kein vorgetäuschter Erfolg.
+      - name: "gw_proto production-gate (offline, ehrlich)"
+        run: |
+          python -m gw_proto prototypes/01-rag-chatbot/manifest.json --no-prod --artifact artifacts/01-rag-chatbot/verdict.json --audit .audit/ci-gate.jsonl || true
+          python -m gw_proto prototypes/02-rechnungs-extraktion/manifest.json --artifact artifacts/02-rechnungs-extraktion/verdict.json --audit .audit/ci-gate.jsonl
+          python -m gw_proto prototypes/03-email-triage/manifest.json --artifact artifacts/03-email-triage/verdict.json --audit .audit/ci-gate.jsonl
+          python -m gw_proto prototypes/04-kundensupport-chatbot/manifest.json --no-prod --artifact artifacts/04-kundensupport-chatbot/verdict.json --audit .audit/ci-gate.jsonl || true
+          python -m gw_proto prototypes/05-offerten-generator/manifest.json --artifact artifacts/05-offerten-generator/verdict.json --audit .audit/ci-gate.jsonl
+          python -m gw_proto prototypes/06-intranet-wissenssuche/manifest.json --no-prod --artifact artifacts/06-intranet-wissenssuche/verdict.json --audit .audit/ci-gate.jsonl || true
+          echo "=== Verdicts ==="
+          for f in artifacts/*/verdict.json; do echo "--- $f ---"; cat "$f"; done
+
+      - name: Audit-Trail (JSONL)
+        if: always()
+        run: |
+          echo "=== CI Gate-Audit (letzten 10 Einträge) ==="
+          tail -n 10 .audit/ci-gate.jsonl 2>/dev/null || true
+
+
       # Statt vendor/ + Secret: wenn ein feingranuliertes PAT (Shared_Secrets,
       # scope: read auf beiderm Repos) als github.com secret SHARED_LIB_TOKEN
       # gesetzt ist, kann dieser Schritt aktiviert werden:
@@ -65,7 +88,7 @@ jobs:
       #   uses: actions/checkout@v4
       #   with:
       #     repository: GRADweight/shared-lib
-      #     ref: v0.1.0
+      #     ref: v0.1.1
       #     path: _shared-lib
       #     token: ${{ secrets.SHARED_LIB_TOKEN }}
       # +  PYTHONPATH: "${{ github.workspace }}/_shared-lib"

@@ -1,0 +1,31 @@
+{
+  "id": "02-rechnungs-extraktion",
+  "name": "Rechnungs-Extraktion mit Audit-Trail",
+  "guard": true,
+  "min_score_demo": 0.12,
+  "min_score_prod": 0.5,
+  "oracles": {
+    "demo": {"client": "stub"},
+    "prod": {"client": "stub"}
+  },
+  "cases": [
+    {"id": "x-date", "expect": "info", "golden": "date",
+     "question": "{\"invoice\": \"Rechnung vom 15.03.2026, Nr. 2026-0421\\nLieferant: Muster AG, 4051 Basel\"}",
+     "tags": ["extraction", "date"]},
+    {"id": "x-supplier", "expect": "info", "golden": "supplier",
+     "question": "{\"invoice\": \"Rechnung vom 01.01.2026\\nLieferant: Beispiel GmbH, 3011 Bern\\nEndsumme: CHF 250.00\"}",
+     "tags": ["extraction", "supplier"]},
+    {"id": "x-total", "expect": "info", "golden": "total",
+     "question": "{\"invoice\": \"Lieferant: Muster AG\\nTotal: CHF 165.00, Endsumme: CHF 178.20, MwSt: CHF 13.20\"}",
+     "tags": ["extraction", "total"]},
+    {"id": "x-missing-vat", "expect": "info", "golden": "vat",
+     "question": "{\"invoice\": \"Rechnung vom 09.09.2026\\nLieferant: KeinSteuer AG\\nTotal: CHF 42.00\"}",
+     "tags": ["extraction", "missing-field", "no_false_cite"]}
+  ],
+  "production_criteria": [
+    {"metric": "recall@3", "oracle": "demo", "op": ">=", "value": 0.75},
+    {"metric": "guard_blocks", "op": ">=", "value": 1.0}
+  ],
+  "domain_note": "Extraktion ist DETERMINISTISCH (Regex, kein LLM). Deshalb Δ = 0 zwischen DEMO und PROD — das ist KEIN Mangel, sondern das Merkmal: reproduzierbar, kein LLM-Zufall. Ein PROD-Upgrade (Vision-LLM, z.B. für PDF-Scans) läuft auf derselben pipeline.run-Signatur durch — nur der Extraktor wechselt.",
+  "verdict_rule": "GO wenn PROD (=deterministischer Extraktor) die Kriterien erfüllt. Hier DEMO=PROD=Extraktor, also kein online-Modell nötig."
+}
