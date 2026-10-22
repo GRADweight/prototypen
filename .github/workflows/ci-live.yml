@@ -1,0 +1,150 @@
+# CI Live-Gate — prototypen
+#
+# ZUSTAND: INAKTIV per default (on: manual = workflow_dispatch).
+# Diese Datei laesst sich per Hand ausloesen, aber nach Registrierung
+# eines self-hosted Runners mit Label `gw-ollama` kann `on:push`
+# aktiviert werden (siehe RUNNER-INSTALLATION.md + scripts/register-runner.sh).
+#
+# PRINZIP (warum zwei Workflows):
+#   ci.yml      — alle smoke + offline-gate + drift-guard   -> ehrlich CONDITIONAL fuer RAG (kein Modell)
+#   ci-live.yml — self-hosted Ollama-Runner mit GW_INFER_URL -> ECHTER go/conditional mit DELTA
+#
+# shared-lib ist privat; vendor/ ist byte-identical v0.1.1, reicht fuer
+# alle Prototypen (kein SHARED_LIB_TOKEN erforderlich, es sei denn
+# vendor/ sollte ersetzt werden).
+#
+# Aktivierung (3 Schritte, im RUNNER-INSTALLATION.md):
+#   1. scripts/register-runner.sh --label gw-ollama
+#   2. Repo Secret:  GW_INFER_URL=http://<runner>:11434
+#                    GW_INFER_EMBED=nomic-embed-text
+#   3. on:  von workflow_dispatch auf push/pull_request umstellen
+#
+# Fail-loud: falls Ollama NICHT erreichbar -> Job rot (kein vorgetaschter GO).
+
+name: protypen-live-gate
+
+on:
+  # INAKTIV per default: nur workflow_dispatch.
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Ollama models (comma-sep, optional)"
+        required: false
+        default: "nomic-embed-text"
+  # AKTIV nach Runner-setup (uncommenten):
+  # push:
+  #   branches: [main]
+  # pull_request:
+
+jobs:
+  # -------------------------------------------------------------------------
+  # LIVE GATE: alle Prototypen durch ihren Production-Gate mit EMBED-Modell
+  # on dem Runner. Erzeugt JSON-Verdicts mit sichtbarem DELTA.
+  # Wenn kein Runner mit Label `gw-ollama` da ist, wartet der Job in der
+  # Queue bis timeout-minutes erreicht ist.
+  # -------------------------------------------------------------------------
+  live-gate:
+    runs-on: [self-hosted, gw-ollama]
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: "${{ github.workspace }}/vendor"
+      GW_INFER_URL: "${{ secrets.GW_INFER_URL || 'http://localhost:11434' }}"
+      GW_INFER_EMBED: "${{ secrets.GW_INFER_EMBED || 'nomic-embed-text' }}"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Fail-loud: Ollama muss erreichbar sein, sonst rotiert der Job.
+      - name: Ollama reachable? (fail-loud, 3x Warmup)
+        id: ollama-check
+        run: |
+          set -e
+          echo "Probier GW_INFER_URL=$GW_INFER_URL model=$GW_INFER_EMBED"
+          ok=0
+          for i in 1 2 3; do
+            if curl -fsS --max-time 10 -X POST "${GW_INFER_URL}/api/embeddings" \
+                  -H 'Content-Type: application/json' \
+                  -d "{\"model\": \"${GW_INFER_EMBED}\", \"prompt\": \"warm\"}" >/dev/null 2>&1; then
+              echo "::notice::WARMUP $i: /api/embeddings OK"
+              ok=1; break
+            fi
+            if curl -fsS --max-time 10 -X POST "${GW_INFER_URL}/v1/embeddings" \
+                  -H 'Content-Type: application/json' \
+                  -d "{\"model\": \"${GW_INFER_EMBED}\", \"input\": [\"warm\"]}" >/dev/null 2>&1; then
+              echo "::notice::WARMUP $i: /v1/embeddings OK"
+              ok=1; break
+            fi
+            echo "::warning::WARMUP $i: fail, retry in 3s"
+            sleep 3
+          done
+          [ "$ok" = "1" ] || { echo "::error::No working Ollama endpoint on ${GW_INFER_URL}"; exit 1; }
+
+      # Drift-guard (fuer Konsistenz mit ci.yml)
+      - name: Vendor drift-guard
+        run: |
+          [ -d vendor/gw_shared_lib ] || { echo "vendor fehlt"; exit 1; }
+          python3 -c "import sys; sys.path.insert(0,'vendor'); \
+          from gw_shared_lib.guard import INJECTION_SIGNATURES as s; \
+          assert len(s)==16, 'DRIFT: %d signatures' % len(s); \
+          print('OK: 16 signatures, v0.1.1')"
+
+      # LIVE GATE: 3 Prototypen
+      - name: "gw_proto 01-rag-chatbot (PROD = Ollama)"
+        run: |
+          python -m gw_proto prototypes/01-rag-chatbot/manifest.json \
+            --artifact artifacts/01-rag-chatbot/verdict-live.json \
+            --audit .audit/ci-gate-live.jsonl
+        continue-on-error: false
+
+      - name: "gw_proto 02-rechnungs-extraktion (PROD = Ollama)"
+        run: |
+          python -m gw_proto prototypes/02-rechnungs-extraktion/manifest.json \
+            --artifact artifacts/02-rechnungs-extraktion/verdict-live.json \
+            --audit .audit/ci-gate-live.jsonl
+        continue-on-error: true   # 02 ist deterministisch, kein PROD lift — ok
+
+      - name: "gw_proto 03-email-triage (PROD = Ollama)"
+        run: |
+          python -m gw_proto prototypes/03-email-triage/manifest.json \
+            --artifact artifacts/03-email-triage/verdict-live.json \
+            --audit .audit/ci-gate-live.jsonl
+        continue-on-error: true
+
+      # Sichtbarer DELTA: alle Verdict im Log
+      - name: "Delta-Report"
+        run: |
+          for f in artifacts/*/*/verdict-live.json; do
+            [ -f "$f" ] || continue
+            echo "=== $f ==="
+            cat "$f"; echo
+          done
+
+      # Verdict-Check: kein NO-GO (JSON-Feld heisst "overall", nicht "verdict")
+      - name: "Check: kein NO-GO unter den Verdicts"
+        run: |
+          failed=0
+          for f in artifacts/*/*/verdict-live.json; do
+            [ -f "$f" ] || continue
+            overall=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get('overall',''))" "$f")
+            echo "$f -> $overall"
+            if [ "$overall" = "NO-GO" ]; then
+              echo "::error::$f ist NO-GO"
+              failed=1
+            fi
+          done
+          [ "$failed" = "0" ] || exit 1
+
+      # Artefakt hochladen
+      - name: Upload Verdicts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-gate-verdicts
+          path: |
+            artifacts/
+            .audit/ci-gate-live.jsonl
+          if-no-files-found: ignore
