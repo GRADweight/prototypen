@@ -62,13 +62,16 @@ jobs:
       # PROD-Orakel offline => jeder Prototyp, der ein online-Modell braucht,
       # gibt ehrlich CONDITIONAL (nicht GO). Deterministische Domänen (Extraktion)
       # geben GO. Das ist der ehrliche Zustand — kein vorgetäuschter Erfolg.
-      - name: gw_proto production-gate (offline, ehrlich)
+      - name: "gw_proto production-gate (offline, ehrlich)"
         run: |
           python -m gw_proto prototypes/01-rag-chatbot/manifest.json --no-prod --artifact artifacts/01-rag-chatbot/verdict.json --audit .audit/ci-gate.jsonl || true
           python -m gw_proto prototypes/02-rechnungs-extraktion/manifest.json --artifact artifacts/02-rechnungs-extraktion/verdict.json --audit .audit/ci-gate.jsonl
           python -m gw_proto prototypes/03-email-triage/manifest.json --artifact artifacts/03-email-triage/verdict.json --audit .audit/ci-gate.jsonl
+          python -m gw_proto prototypes/04-kundensupport-chatbot/manifest.json --no-prod --artifact artifacts/04-kundensupport-chatbot/verdict.json --audit .audit/ci-gate.jsonl || true
+          python -m gw_proto prototypes/05-offerten-generator/manifest.json --artifact artifacts/05-offerten-generator/verdict.json --audit .audit/ci-gate.jsonl
+          python -m gw_proto prototypes/06-intranet-wissenssuche/manifest.json --no-prod --artifact artifacts/06-intranet-wissenssuche/verdict.json --audit .audit/ci-gate.jsonl || true
           echo "=== Verdicts ==="
-          for f in artifacts/*\/*/verdict.json; do echo "--- $f ---"; cat "$f"; done
+          for f in artifacts/*/*/verdict.json; do echo "--- $f ---"; cat "$f"; done
 
       - name: Audit-Trail (JSONL)
         if: always()
