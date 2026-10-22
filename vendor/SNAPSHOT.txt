@@ -1,7 +1,12 @@
 gw_shared_lib vendor snapshot — CANONICAL-Quelle: GRADweight/shared-lib
-commit: f05457b4c5c6057021f7bdcc333496a81f33a7fd
-tag: v0.1.0
+branch: main  tag: v0.1.1  (local, nicht gepusht)
+commit: 6a7573310e463d52d0ac4622948066e25dc78730
 Grund: 10/2026 (pro Wave-1: shared-lib privat, kein Cross-Repo-Leserecht im CI-Event-Token).
+v0.1.1 (22.10.2026): 2 Vendor-Fixes zurueckportiert (audit: data= no longer in kwargs;
+  inference: embed() URL-aware, /v1 nicht doppelt) + 2 Regression-Tests (12/12 OK).
+  vendor/ ist jetzt BYTE-IDENTICAL zu CANONICAL v0.1.1 -> kein Drift mehr.
 Drift-Guard: CI prueft guard.INJECTION_SIGNATURES = 16. Abweichung => rot => neu synchronisieren.
+Sync-Rezept:  cp -p shared-lib/gw_shared_lib/*.py prototypen/vendor/gw_shared_lib/
+              (dann SNAPSHOT.txt + alle v0.1.x-Referenzen hier aktualisieren)
 Upgrade-Pfad: bei v0.2+ von shared-lib neu kopieren + SNAPSHOT aktualisieren.
 Produktion (optional): Repo-Secret SHARED_LIB_TOKEN => checkout statt vendor (siehe ci.yml Kommentar).

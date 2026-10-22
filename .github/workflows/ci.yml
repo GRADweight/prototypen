@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.0.
+      # DRIFT-GUARD: vendor/ ist ein Snapshot von GRADweight/shared-lib v0.1.1.
       # CANONICAL-Invariant: guard.INJECTION_SIGNATURES == 16. Abweichung =>
       # rot => vendor/ muss von shared-lib neu synchronisiert + SNAPSHOT
       # aktualisiert werden (kein stiller Drift in den CANONICAL-State).
@@ -85,7 +85,7 @@ jobs:
       #   uses: actions/checkout@v4
       #   with:
       #     repository: GRADweight/shared-lib
-      #     ref: v0.1.0
+      #     ref: v0.1.1
       #     path: _shared-lib
       #     token: ${{ secrets.SHARED_LIB_TOKEN }}
       # +  PYTHONPATH: "${{ github.workspace }}/_shared-lib"

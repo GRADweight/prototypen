@@ -140,6 +140,10 @@ def audit_action(log: AuditLog | str | Path, action: str, **kwargs) -> AuditEntr
     for k, v in kwargs.items():
         if k not in known:
             data[k] = v
+    # v0.1.1: `data` ist ein bekanntes Feld, darf aber NICHT auch noch in
+    # kwargs bleiben — sonst landet es doppelt (explizit data= + **kwargs)
+    # und AuditEntry(...) wirft TypeError. Nur noch die andern bekannten
+    # Felder splattern. (Regression-Test: test_audit_explicit_data_no_conflict)
     kwargs = {k: v for k, v in kwargs.items() if k in known and k != "data"}
     entry = AuditEntry(action=action, data=data, **kwargs)
     log.append(entry)

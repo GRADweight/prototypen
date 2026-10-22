@@ -90,8 +90,9 @@ Produktion, es bräuchte ein Modell. Nicht ein vorgetäuschtes
 - `nomic-embed-text` ist ein 137M-Modell für die Demo; für Produktion
   sollte ein feingranuliertes Embedding oder ein Domain-Embedding
   genommen werden.
-- `gw_shared_lib/vendor/` ist ein Snapshot v0.1.0 (mit Drift-Guard:
-  16 Injection-Signaturen — Abweichung bricht den CI).
+- `gw_shared_lib/vendor/` ist ein Snapshot v0.1.1 (mit Drift-Guard:
+  16 Injection-Signaturen — Abweichung bricht den CI). Byte-identical zu
+  CANONICAL v0.1.1 (22.10.2026: 2 Vendor-Fixes zurueckportiert, 12/12 Tests).
 
 ## Kontakt
 

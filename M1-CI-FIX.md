@@ -23,8 +23,9 @@ Zwei Ursachen, beide aus dem echten CI-Log gezogen (nicht aus Simulation):
 ## Lösung
 
 - `vendor/gw_shared_lib/` — CANONICAL-Snapshot von `GRADweight/shared-lib`
-  v0.1.0 (commit f05457b4c5c6057021f7bdcc333496a81f33a7fd). 6 stdlib-Module,
-  kein Build-Step, kein Netz.
+  v0.1.1 (commit 6a7573310e463d52d0ac4622948066e25dc78730, branch
+  fix/v0.1.1-vendor-drift). 8 stdlib-Module, kein Build-Step, kein Netz.
+  (v0.1.1 = 2 Vendor-Fixes zurueckportiert + 2 Regression-Tests, 12/12 OK.)
 - CI: `PYTHONPATH: "${{ github.workspace }}/vendor"`
 - **Drift-Guard:** `assert len(INJECTION_SIGNATURES) == 16` in jedem CI-Run.
   Abweichung → CI rot → `vendor/` muss neu synchronisiert werden.

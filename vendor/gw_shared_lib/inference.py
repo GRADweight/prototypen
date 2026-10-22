@@ -62,6 +62,9 @@ class Client:
         Rückgabe: Liste von Vektoren, immer in derselben Reihenfolge.
         Versucht je einen native-Ollama- und einen OpenAI-kompatiblen
         Endpoint pro Input (fail-soft; leere Vektoren = nächster Versuch).
+        v0.1.1: URL-aware — bei `/v1`-Basis wird `/v1/embeddings` NICHT zum
+        doppelten `.../v1/v1/embeddings`; native Ollama läuft zuerst, dann
+        OpenAI-kompatibel. (Regression-Test: test_embed_is_url_aware)
         """
         model = model or self.embed_model
         single = isinstance(texts, str)
