@@ -140,7 +140,7 @@ def audit_action(log: AuditLog | str | Path, action: str, **kwargs) -> AuditEntr
     for k, v in kwargs.items():
         if k not in known:
             data[k] = v
-    kwargs = {k: v for k, v in kwargs.items() if k in known}
+    kwargs = {k: v for k, v in kwargs.items() if k in known and k != "data"}
     entry = AuditEntry(action=action, data=data, **kwargs)
     log.append(entry)
     return entry

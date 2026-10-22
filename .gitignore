@@ -1,5 +1,6 @@
 # .gitignore — prototypen
 .audit/
+artifacts/
 __pycache__/
 *.py[cod]
 .venv/
