@@ -82,7 +82,7 @@ Produktion, es bräuchte ein Modell. Nicht ein vorgetäuschtes
 
 ## Ehrliche Grenzen
 
-- **3 von 20 Prototypen** haben jetzt Code + Gate (Roadmap:
+- **3 von 20 Prototypen** haben jetzt Code + Gate (Katalog:
   `~/.hermes/plans/2026-10-22_prototypen-m2-umruebung.md`).
 - In CI (GitHub-Actions, kein Ollama) geben RAG-Prototypen
   `CONDITIONAL`, nicht `GO` — das ist **beabsichtigt** und zeigt,
