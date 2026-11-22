@@ -1,0 +1,4 @@
+docs: interne Planungsdoku entfernen (ROADMAP-4-wochens, M1-CI-FIX)
+
+Diese Dokumente enthielten interne Roadmap-Details und PR-Verweise.
+Vor Public: nicht geeignet. Community-Fokus: Code + Demo-Gates.
