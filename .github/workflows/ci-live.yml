@@ -9,7 +9,7 @@
 #   ci.yml      — alle smoke + offline-gate + drift-guard   -> ehrlich CONDITIONAL fuer RAG (kein Modell)
 #   ci-live.yml — self-hosted Ollama-Runner mit GW_INFER_URL -> ECHTER go/conditional mit DELTA
 #
-# shared-lib ist privat; vendor/ ist byte-identical v0.1.1, reicht fuer
+# shared-lib ist oeffentlich; vendor/ ist byte-identical v0.1.1, reicht fuer
 # alle Prototypen (kein SHARED_LIB_TOKEN erforderlich, es sei denn
 # vendor/ sollte ersetzt werden).
 #

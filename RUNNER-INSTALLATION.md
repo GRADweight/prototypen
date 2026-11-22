@@ -79,7 +79,7 @@ gh run list --repo GRADweight/prototypen --workflow protypen-live-gate \
 
 ## Notizen
 
-- **shared-lib ist privat.** Fuer den Live-Gate ist `vendor/` byte-identical
+- **shared-lib ist oeffentlich.** Fuer den Live-Gate ist `vendor/` byte-identical
   v0.1.1 und reicht. Ein `SHARED_LIB_TOKEN` ist NICHT erforderlich.
 - **Fail-loud:** falls Ollama nicht erreichbar ist, der Job rotiert
   (kein vorgetaucht GO).

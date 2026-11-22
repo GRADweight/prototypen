@@ -1,7 +1,8 @@
 gw_shared_lib vendor snapshot — CANONICAL-Quelle: GRADweight/shared-lib
-branch: main  tag: v0.1.1  (local, nicht gepusht)
+branch: main  tag: v0.1.1  (public, gepusht)
 commit: 6a7573310e463d52d0ac4622948066e25dc78730
-Grund: 10/2026 (pro Wave-1: shared-lib privat, kein Cross-Repo-Leserecht im CI-Event-Token).
+Grund: 10/2026 (shared-lib war privat, kein Cross-Repo-Leserecht im CI-Event-Token;
+  seit 22.10.2026 oeffentlich, vendor/ bleibt als deterministischer Snapshot).
 v0.1.1 (22.10.2026): 2 Vendor-Fixes zurueckportiert (audit: data= no longer in kwargs;
   inference: embed() URL-aware, /v1 nicht doppelt) + 2 Regression-Tests (12/12 OK).
   vendor/ ist jetzt BYTE-IDENTICAL zu CANONICAL v0.1.1 -> kein Drift mehr.

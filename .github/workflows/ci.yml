@@ -14,7 +14,7 @@ jobs:
       matrix:
         python-version: ['3.11', '3.12']
     # gw-shared-lib (6 Bausteine, stdlib, kein Build) ist in
-    #   vendor/gw_shared_lib/ venvort. PYTHONPATH zeigt auf vendor/,
+    #   vendor/gw_shared_lib/ vendorisiert. PYTHONPATH zeigt auf vendor/,
     #   damit import gw_shared_lib ohne Netz, ohne pip, ohne Secret
     #   funktioniert. Kein public-Abhaengigkeit.
     env:
