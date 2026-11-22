@@ -12,13 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.11', '3.12']
-    # CANONICAL gw-shared-lib (6 Bausteine, stdlib, kein Build) ist in
-    #   vendor/gw_shared_lib/  VENDOR-t, weil shared-lib PRIVAT ist (Q1 21.10.2026:
-    #   Wave 1 bleibt privat) und ein pull_request-Event-Token nur das aktuelle
-    #   Repo (prototypen) liest, nicht ein zweites privates Org-Repo.
-    #   PYTHONPATH zeigt auf vendor/ => import gw_shared_lib ohne Netz, ohne
-    #   pip, ohne Secret. Kein public-Abhaengigkeit.
+        python-version: ['3.11', '3.12']
+    # gw-shared-lib (6 Bausteine, stdlib, kein Build) ist in
+    #   vendor/gw_shared_lib/ venvort. PYTHONPATH zeigt auf vendor/,
+    #   damit import gw_shared_lib ohne Netz, ohne pip, ohne Secret
+    #   funktioniert. Kein public-Abhaengigkeit.
     env:
       PYTHONPATH: "${{ github.workspace }}/vendor"
     steps:
@@ -80,15 +78,5 @@ jobs:
           tail -n 10 .audit/ci-gate.jsonl 2>/dev/null || true
 
 
-      # Statt vendor/ + Secret: wenn ein feingranuliertes PAT (Shared_Secrets,
-      # scope: read auf beiderm Repos) als github.com secret SHARED_LIB_TOKEN
-      # gesetzt ist, kann dieser Schritt aktiviert werden:
-      #
-      # - name: Checkout shared-lib (privat, canonical via Secret)
-      #   uses: actions/checkout@v4
-      #   with:
-      #     repository: GRADweight/shared-lib
-      #     ref: v0.1.1
-      #     path: _shared-lib
-      #     token: ${{ secrets.SHARED_LIB_TOKEN }}
-      # +  PYTHONPATH: "${{ github.workspace }}/_shared-lib"
+      # Alternativ: Wenn SHARED_LIB_TOKEN als GitHub Secret gesetzt ist,
+      # kann gw-shared-lib direkt per pip installiert werden.
